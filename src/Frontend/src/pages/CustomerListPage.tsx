@@ -11,6 +11,7 @@ import {
   Box,
   styled,
   tableCellClasses,
+  Button,
 } from "@mui/material";
 
 import { useState, useEffect } from "react";
@@ -42,6 +43,21 @@ export default function CustomerListPage() {
         });
     }, [name, email]);
 
+    const handleExport = () => {
+        fetch(`/api/customers/export?name=${name}&email=${email}`)
+        .then((response) => response.blob())
+        .then(blob => {
+          const downloadUrl = window.URL.createObjectURL(blob);
+
+          const a = document.createElement('a');
+
+          a.href = downloadUrl;
+
+          a.download = "customers.xml";
+
+          a.click();
+        })
+    }
 
     return (
     <>
@@ -60,6 +76,7 @@ export default function CustomerListPage() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         ></TextField>
+        <Button variant="contained" sx={{ml:"auto"}} onClick={handleExport}>Export XML</Button>
       </Box>
 
       <TableContainer component={Paper}>
