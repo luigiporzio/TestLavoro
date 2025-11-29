@@ -18,6 +18,19 @@ static class RouteRegistrationExtensions
                     .WithName("GetEmployeesList")
                     .WithOpenApi();
 
+        apiGroup.MapGet("employees/export", async([AsParameters] EmployeeExportQuery query, IMediator mediator) =>
+        {
+            var xmlBytes = await mediator.Send(query);
+
+            return Results.File(
+                xmlBytes,
+                "application/xml",
+                "employees.xml"
+            );
+        })
+        .WithName("ExportEmployees")
+        .WithOpenApi();
+
         apiGroup.MapGet("customers/list", async ([AsParameters] CustomerListQuery query, IMediator mediator) => await mediator.Send(query))
                     .WithName("GetCustomersList")
                     .WithOpenApi();
