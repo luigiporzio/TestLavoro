@@ -74,7 +74,7 @@ export default function EmployeeListPage() {
         params.append("firstName", firstName);
         if(lastName)
         params.append("lastName", lastName);
-        fetch(`api/employees/export?firstName=${params.toString()}`)
+        fetch(`api/employees/export?${params.toString()}`)
         .then((response) => response.blob())
         .then(blob => {
             const downloadUrl = window.URL.createObjectURL(blob);
@@ -83,7 +83,7 @@ export default function EmployeeListPage() {
 
             a.href = downloadUrl;
 
-            a.download = "customers.xml";
+            a.download = "employees.xml";
 
             a.click();
         });
