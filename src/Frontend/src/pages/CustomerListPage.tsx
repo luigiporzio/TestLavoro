@@ -1,20 +1,26 @@
 import {
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
   TextField,
   Box,
-  styled,
-  tableCellClasses,
   Button,
 } from "@mui/material";
 
 import { useState, useEffect } from "react";
+
+import {DataGrid, GridColDef} from "@mui/x-data-grid";
+
+function useDebounce(value: string, delay: number){
+
+  const [inputValue, setInputValue] = useState(value);
+
+  useEffect( () => {
+    const delayInputTime = setTimeout( () => 
+      setInputValue(value), delay);
+      return () => clearTimeout(delayInputTime);
+  }, [value, delay]);
+
+  return inputValue;
+}
 
 interface CustomerListQueryResponse {
     id: number;
@@ -33,18 +39,34 @@ export default function CustomerListPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
 
+    const debouncedName = useDebounce(name, 500);
+    const debouncedEmail = useDebounce(email, 500);
+
     useEffect( () => {
-        fetch(`/api/customers/list?name=${name}&email=${email}`)
+        const params = new URLSearchParams();
+        if(debouncedName)
+        params.append("name", debouncedName);
+
+        if(debouncedEmail)
+        params.append("email", debouncedEmail);
+
+        fetch(`/api/customers/list?${params.toString()}`)
         .then((response) => {
             return response.json();
         })
         .then((data) => {
             setList(data as CustomerListQueryResponse[]);
         });
-    }, [name, email]);
+    }, [debouncedName, debouncedEmail]);
 
     const handleExport = () => {
-        fetch(`/api/customers/export?name=${name}&email=${email}`)
+        const params = new URLSearchParams();
+
+        if(name)
+        params.append("name", name);
+        if(email)
+        params.append("email",email);
+        fetch(`/api/customers/export?${params.toString()}`)
         .then((response) => response.blob())
         .then(blob => {
           const downloadUrl = window.URL.createObjectURL(blob);
@@ -56,8 +78,18 @@ export default function CustomerListPage() {
           a.download = "customers.xml";
 
           a.click();
-        })
-    }
+        });
+    };
+
+    const columns: GridColDef[] = [
+      {field: "name", headerName: "Name", flex: 1},
+      {field: "address", headerName: "Address", flex: 1},
+      {field: "email", headerName: "Email", flex: 1},
+      {field: "phone", headerName: "Phone", flex: 1},
+      {field: "iban", headerName: "Iban", flex: 1},
+      {field: "categoryCode", headerName: "Code", flex: 1},
+      {field: "categoryDescription", headerName: "Description", flex: 1}
+    ];
 
     return (
     <>
@@ -79,41 +111,14 @@ export default function CustomerListPage() {
         <Button variant="contained" sx={{ml:"auto"}} onClick={handleExport}>Export XML</Button>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table sx={{minWidth: 650}} aria-label = "simple table">
-            <TableHead>
-                <TableRow>
-                    <StyledTableHeadCell>Name</StyledTableHeadCell>
-                    <StyledTableHeadCell>Address</StyledTableHeadCell>
-                    <StyledTableHeadCell>Email</StyledTableHeadCell>
-                    <StyledTableHeadCell>Phone</StyledTableHeadCell>
-                    <StyledTableHeadCell>Iban</StyledTableHeadCell>
-                    <StyledTableHeadCell>Code</StyledTableHeadCell>
-                    <StyledTableHeadCell>Description</StyledTableHeadCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>
-                {list.map((row) => (
-                    <TableRow key={row.id}>
-                        <TableCell>{row.name}</TableCell>
-                        <TableCell>{row.address}</TableCell>
-                        <TableCell>{row.email}</TableCell>
-                        <TableCell>{row.phone}</TableCell>
-                        <TableCell>{row.iban}</TableCell>
-                        <TableCell>{row.categoryCode}</TableCell>
-                        <TableCell>{row.categoryDescription}</TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-      </TableContainer>
+      <div style={{height: 600, width: "100%"}}>
+        <DataGrid
+        rows={list}
+        columns={columns}
+        pageSizeOptions={[5, 10, 25, 50]}
+        pagination
+        ></DataGrid>
+      </div>
     </>
     );
 }
-
-const StyledTableHeadCell = styled(TableCell)(({ theme }) => ({
-  [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.primary.light,
-    color: theme.palette.common.white,
-  },
-}));
