@@ -16,6 +16,20 @@ import {
 
 import {useState, useEffect} from "react";
 
+function useDebounce(value: string, delay: number){
+
+  const [inputValue, setInputValue] = useState(value);
+
+  useEffect( () => {
+    const delayInputTime = setTimeout( () => 
+      setInputValue(value), delay);
+      return () => clearTimeout(delayInputTime);
+  }, [value, delay]);
+
+  return inputValue;
+}
+
+
 interface EmployeesListQueryResponse{
     id: number;
     code: string;
@@ -36,16 +50,31 @@ export default function EmployeeListPage() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
 
+    const debouncedFirstName = useDebounce(firstName, 1000);
+    const debouncedLastName = useDebounce(lastName, 1000);
+
     useEffect( () => {
-        fetch(`/api/employees/list?firstName=${firstName}&lastName=${lastName}`)
+        const params = new URLSearchParams();
+        if(debouncedFirstName)
+        params.append("name", debouncedFirstName);
+
+        if(debouncedLastName)
+        params.append("email", debouncedLastName);
+        fetch(`/api/employees/list?${params.toString()}`)
         .then((response) => response.json())
         .then((data) => {
             setList(data as EmployeesListQueryResponse[])
         });
-        }, [firstName, lastName]);
+        }, [debouncedFirstName, debouncedLastName]);
 
     const handleExport = () => {
-        fetch(`api/employees/export?firstName=${firstName}&lastName=${lastName}`)
+        const params = new URLSearchParams();
+
+        if(firstName)
+        params.append("firstName", firstName);
+        if(lastName)
+        params.append("lastName", lastName);
+        fetch(`api/employees/export?firstName=${params.toString()}`)
         .then((response) => response.blob())
         .then(blob => {
             const downloadUrl = window.URL.createObjectURL(blob);

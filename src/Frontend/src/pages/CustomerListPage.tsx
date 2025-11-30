@@ -1,13 +1,20 @@
 import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography,
   TextField,
   Box,
+  styled,
+  tableCellClasses,
   Button,
 } from "@mui/material";
 
 import { useState, useEffect } from "react";
-
-import {DataGrid, GridColDef} from "@mui/x-data-grid";
 
 function useDebounce(value: string, delay: number){
 
@@ -39,8 +46,8 @@ export default function CustomerListPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
 
-    const debouncedName = useDebounce(name, 500);
-    const debouncedEmail = useDebounce(email, 500);
+    const debouncedName = useDebounce(name, 1000);
+    const debouncedEmail = useDebounce(email, 1000);
 
     useEffect( () => {
         const params = new URLSearchParams();
@@ -81,16 +88,6 @@ export default function CustomerListPage() {
         });
     };
 
-    const columns: GridColDef[] = [
-      {field: "name", headerName: "Name", flex: 1},
-      {field: "address", headerName: "Address", flex: 1},
-      {field: "email", headerName: "Email", flex: 1},
-      {field: "phone", headerName: "Phone", flex: 1},
-      {field: "iban", headerName: "Iban", flex: 1},
-      {field: "categoryCode", headerName: "Code", flex: 1},
-      {field: "categoryDescription", headerName: "Description", flex: 1}
-    ];
-
     return (
     <>
       <Typography variant="h4" sx={{ textAlign: "center", mt: 4, mb: 4 }}>
@@ -111,14 +108,43 @@ export default function CustomerListPage() {
         <Button variant="contained" sx={{ml:"auto"}} onClick={handleExport}>Export XML</Button>
       </Box>
 
-      <div style={{height: 600, width: "100%"}}>
-        <DataGrid
-        rows={list}
-        columns={columns}
-        pageSizeOptions={[5, 10, 25, 50]}
-        pagination
-        ></DataGrid>
-      </div>
+       <TableContainer component={Paper}>
+        <Table sx={{minWidth: 650}} aria-label = "simple table">
+            <TableHead>
+                <TableRow>
+                    <StyledTableHeadCell>Name</StyledTableHeadCell>
+                    <StyledTableHeadCell>Address</StyledTableHeadCell>
+                    <StyledTableHeadCell>Email</StyledTableHeadCell>
+                    <StyledTableHeadCell>Phone</StyledTableHeadCell>
+                    <StyledTableHeadCell>Iban</StyledTableHeadCell>
+                    <StyledTableHeadCell>Code</StyledTableHeadCell>
+                    <StyledTableHeadCell>Description</StyledTableHeadCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {list.map((row) => (
+                    <TableRow key={row.id}>
+                        <TableCell>{row.name}</TableCell>
+                        <TableCell>{row.address}</TableCell>
+                        <TableCell>{row.email}</TableCell>
+                        <TableCell>{row.phone}</TableCell>
+                        <TableCell>{row.iban}</TableCell>
+                        <TableCell>{row.categoryCode}</TableCell>
+                        <TableCell>{row.categoryDescription}</TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+      </TableContainer>
     </>
     );
-}
+  }
+
+  const StyledTableHeadCell = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: theme.palette.primary.light,
+    color: theme.palette.common.white,
+  },
+}));
+
+
