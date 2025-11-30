@@ -56,10 +56,10 @@ export default function EmployeeListPage() {
     useEffect( () => {
         const params = new URLSearchParams();
         if(debouncedFirstName)
-        params.append("name", debouncedFirstName);
+        params.append("firstName", debouncedFirstName);
 
         if(debouncedLastName)
-        params.append("email", debouncedLastName);
+        params.append("lastName", debouncedLastName);
         fetch(`/api/employees/list?${params.toString()}`)
         .then((response) => response.json())
         .then((data) => {
